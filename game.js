@@ -41,6 +41,10 @@ const state = {
   particles: [],
   bestRun: loadBestRun(),
   pendingJump: false,
+  corgiSpeech: {
+    player: { text: "", timer: 0, cadence: 1.6 },
+    blocker: { text: "", timer: 0, cadence: 0 },
+  },
 };
 
 const player = {
@@ -176,6 +180,12 @@ function startGame() {
   state.shake = 0;
   state.particles = [];
   state.pendingJump = preservePendingJump;
+  state.corgiSpeech.player.text = "";
+  state.corgiSpeech.player.timer = 0.4;
+  state.corgiSpeech.player.cadence = 1.6;
+  state.corgiSpeech.blocker.text = "";
+  state.corgiSpeech.blocker.timer = 0;
+  state.corgiSpeech.blocker.cadence = 0;
 
   player.x = 144;
   player.y = 354;
@@ -204,6 +214,7 @@ function startGame() {
 function update(dt) {
   updateParticles(dt);
   updateMessage(dt);
+  updateSpeech(dt);
 
   if (state.mode !== "playing") {
     state.shake = Math.max(0, state.shake - dt * 24);
@@ -354,6 +365,7 @@ function resolveBlockerCollision() {
     state.shake = 8;
     spawnBurst(player.x, player.y + 18, "#ffe0b2", 8, 48);
     setMessage("The blocker corgi clipped your stride.", 0.9);
+    speak("blocker", "snap, snap", 0.85);
   }
 }
 
@@ -366,6 +378,7 @@ function attemptJump() {
   player.jumpCooldown = 0.1;
   player.jumpHeight = 1;
   spawnBurst(player.x, player.y + 20, "#fff4d8", 6, 28);
+  speak("player", "Bark!", 0.55);
   return true;
 }
 
@@ -400,6 +413,7 @@ function onSquirrelCaught() {
   state.catches += 1;
   state.shake = 16;
   spawnBurst(squirrel.x, squirrel.y, "#fff2a8", 14, 90);
+  speak("player", "Woof!", 0.7);
 
   if (state.catches >= GOAL_CATCHES) {
     finishRound(true);
@@ -474,6 +488,30 @@ function updateMessage(dt) {
   if (state.messageTimer === 0) {
     statusLineEl.textContent = defaultStatusLine();
   }
+}
+
+function updateSpeech(dt) {
+  const playerSpeech = state.corgiSpeech.player;
+  const blockerSpeech = state.corgiSpeech.blocker;
+
+  playerSpeech.timer = Math.max(0, playerSpeech.timer - dt);
+  blockerSpeech.timer = Math.max(0, blockerSpeech.timer - dt);
+
+  if (state.mode !== "playing") {
+    return;
+  }
+
+  if (playerSpeech.timer === 0) {
+    speak("player", Math.random() < 0.5 ? "Bark!" : "Arf!", 0.55);
+    playerSpeech.cadence = 1.3 + Math.random() * 1.2;
+    playerSpeech.timer = playerSpeech.cadence;
+  }
+}
+
+function speak(who, text, duration) {
+  const speech = state.corgiSpeech[who];
+  speech.text = text;
+  speech.timer = duration;
 }
 
 function setMessage(text, duration) {
@@ -645,6 +683,18 @@ function draw(time) {
     accent: "#ec6a38",
     scarf: false,
     highlight: "#ffe1c6",
+    lift: player.jumpHeight,
+  });
+  drawSpeechBubble(blocker, state.corgiSpeech.blocker, {
+    fill: "#fff3f8",
+    stroke: "#f07db0",
+    text: "#74284f",
+    lift: 0,
+  });
+  drawSpeechBubble(player, state.corgiSpeech.player, {
+    fill: "#fffaf1",
+    stroke: "#ec6a38",
+    text: "#5b2410",
     lift: player.jumpHeight,
   });
   drawFenceGlint(time);
@@ -942,6 +992,49 @@ function drawSquirrel(time) {
   ctx.arc(22, -3, 1.5, 0, Math.PI * 2);
   ctx.fill();
 
+  ctx.restore();
+}
+
+function drawSpeechBubble(corgi, speech, palette) {
+  if (!speech.text || speech.timer <= 0) {
+    return;
+  }
+
+  const alpha = Math.min(1, speech.timer / 0.16);
+  const lift = palette.lift || 0;
+  const bubbleX = corgi.x + (corgi.facing > 0 ? 28 : -28);
+  const bubbleY = corgi.y - 54 - lift;
+  const paddingX = 14;
+  const bubbleHeight = 34;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font = '700 18px "Avenir Next Condensed", "Trebuchet MS", sans-serif';
+  const textWidth = ctx.measureText(speech.text).width;
+  const bubbleWidth = textWidth + paddingX * 2;
+  const left = bubbleX - bubbleWidth / 2;
+  const top = bubbleY - bubbleHeight / 2;
+
+  ctx.fillStyle = palette.fill;
+  roundRect(ctx, left, top, bubbleWidth, bubbleHeight, 16);
+  ctx.fill();
+
+  ctx.strokeStyle = palette.stroke;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(bubbleX - 6, top + bubbleHeight - 2);
+  ctx.lineTo(bubbleX + 2, top + bubbleHeight + 10);
+  ctx.lineTo(bubbleX + 10, top + bubbleHeight - 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = palette.text;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(speech.text, bubbleX, bubbleY + 1);
   ctx.restore();
 }
 
