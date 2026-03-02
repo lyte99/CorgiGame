@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Corgi Fence Chase</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="info-panel">
+        <p class="eyebrow">Yard Dash Prototype</p>
+        <h1>Corgi Fence Chase</h1>
+        <p class="lede">
+          Drive Murphy along the fence, cut off the squirrel, and fight through
+          Einstein spinning tight circles in your lane.
+        </p>
+
+        <div class="stats-grid" aria-label="Game stats">
+          <article class="stat-card">
+            <span class="stat-label">Catches</span>
+            <strong id="catchCount">0 / 5</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Time Left</span>
+            <strong id="timer">60.0s</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Stumbles</span>
+            <strong id="stumbleCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">Best Run</span>
+            <strong id="bestRun">No catches yet</strong>
+          </article>
+        </div>
+
+        <div class="control-block">
+          <h2>Controls</h2>
+          <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys to move</p>
+          <p><kbd>Space</kbd> jumps while you chase, <kbd>Enter</kbd> restarts</p>
+          <p>On touch screens, drag on the playfield to steer and tap Jump to hop</p>
+        </div>
+
+        <button id="restartBtn" class="start-button" type="button">
+          Start Chase
+        </button>
+
+        <p id="statusLine" class="status-line">
+          Catch 5 squirrels before the minute runs out.
+        </p>
+      </section>
+
+      <section class="stage-panel">
+        <canvas
+          id="game"
+          width="960"
+          height="600"
+          aria-label="Corgi fence chase game"
+        ></canvas>
+        <button id="jumpBtn" class="jump-button" type="button">Jump</button>
+        <div class="legend-strip">
+          <span><i class="legend-swatch player"></i> Murphy (lead)</span>
+          <span><i class="legend-swatch blocker"></i> Einstein (blocker)</span>
+          <span><i class="legend-swatch squirrel"></i> Squirrel</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="./game.js"></script>
+  </body>
+</html>
