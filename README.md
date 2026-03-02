@@ -1,4 +1,4 @@
-# Corgi Fence Chase
+# snapsnap
 
 A small browser game built with plain HTML, CSS, and JavaScript.
 

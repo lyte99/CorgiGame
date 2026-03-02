@@ -72,6 +72,7 @@ const blocker = {
   centerY: 284,
   orbitAngle: 0,
   orbitRadius: 58,
+  orbitDirection: 1,
   facing: 1,
   runCycle: 0,
 };
@@ -203,6 +204,7 @@ function startGame() {
   blocker.centerY = 284;
   blocker.orbitAngle = Math.PI * 0.25;
   blocker.orbitRadius = 58;
+  blocker.orbitDirection = 1;
   blocker.runCycle = 0;
 
   spawnSquirrel(true);
@@ -282,14 +284,30 @@ function updatePlayer(dt) {
 }
 
 function updateBlocker(dt) {
-  blocker.orbitAngle += dt * (3.2 + state.catches * 0.14);
-  blocker.orbitRadius = 58 + Math.sin(state.elapsed * 3.2) * 5;
+  const squirrelBias = clamp((squirrel.x - player.x) * 0.22, -92, 92);
+  const interceptX = clamp(player.x + squirrelBias, 270, WORLD.width - 220);
+  const pressureY = clamp(player.y - 44 - Math.abs(squirrelBias) * 0.06, 236, 324);
+  const recenterSpeed = 1 - Math.exp(-dt * (2.8 + state.catches * 0.12));
+
+  blocker.centerX = lerp(blocker.centerX, interceptX, recenterSpeed);
+  blocker.centerY = lerp(blocker.centerY, pressureY, recenterSpeed);
+
+  const shouldFlip =
+    (player.x < blocker.centerX - 34 && blocker.orbitDirection < 0) ||
+    (player.x > blocker.centerX + 34 && blocker.orbitDirection > 0);
+
+  if (shouldFlip) {
+    blocker.orbitDirection *= -1;
+  }
+
+  blocker.orbitAngle += dt * (4.2 + state.catches * 0.24) * blocker.orbitDirection;
+  blocker.orbitRadius = 56 + Math.sin(state.elapsed * 3.2) * 6;
   blocker.x = blocker.centerX + Math.cos(blocker.orbitAngle) * blocker.orbitRadius;
   blocker.y =
     blocker.centerY +
     Math.sin(blocker.orbitAngle) * blocker.orbitRadius * 0.76 +
     Math.cos(blocker.orbitAngle * 2.2) * 4;
-  blocker.facing = -Math.sin(blocker.orbitAngle) >= 0 ? 1 : -1;
+  blocker.facing = player.x >= blocker.x ? 1 : -1;
   blocker.runCycle += dt * 13.2;
 }
 
